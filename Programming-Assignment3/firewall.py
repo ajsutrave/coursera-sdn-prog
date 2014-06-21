@@ -30,10 +30,25 @@ class Firewall (EventMixin):
     def __init__ (self):
         self.listenTo(core.openflow)
         log.debug("Enabling Firewall Module")
+        self._firewall_priority = 1
 
     def _handle_ConnectionUp (self, event):    
         ''' Add your logic here ... '''
-        
+
+        with open(policyFile) as fp:
+            keys = fp.readline().strip().split(',')
+            mac_0_idx = keys.index('mac_0')
+            mac_1_idx = keys.index('mac_1')
+            for line in fp.readlines():
+                rule_data = line.strip().split(',')
+
+                msg = of.ofp_flow_mod()
+                msg.priority = self._firewall_priority
+                msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+                msg.match.dl_src = EthAddr(rule_data[mac_0_idx])
+                msg.match.dl_dst = EthAddr(rule_data[mac_1_idx])
+                event.connection.send(msg)
+
 
     
         log.debug("Firewall rules installed on %s", dpidToStr(event.dpid))
