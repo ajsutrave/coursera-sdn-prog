@@ -41,13 +41,57 @@ class TopologySlice (EventMixin):
         log.debug("Switch %s has come up.", dpid)
         
         """ Add your logic here """
-        
 
-        
+        if event.dpid == 1: 
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+            msg.match.dl_src = EthAddr("00:00:00:00:00:01")
+            msg.match.dl_dst = EthAddr("00:00:00:00:00:04")
+            msg.priority = 2
+            event.connection.send(msg)
+
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+            msg.match.dl_src = EthAddr("00:00:00:00:00:01")
+            msg.match.dl_dst = EthAddr("00:00:00:00:00:02")
+            msg.priority = 2
+            event.connection.send(msg)
+
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+            msg.priority = 1
+            event.connection.send(msg)
+
+
+        elif event.dpid == 4:
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+            msg.match.dl_src = EthAddr("00:00:00:00:00:03")
+            msg.match.dl_dst = EthAddr("00:00:00:00:00:04")
+            msg.priority = 2
+            event.connection.send(msg)
+
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+            msg.match.dl_src = EthAddr("00:00:00:00:00:03")
+            msg.match.dl_dst = EthAddr("00:00:00:00:00:02")
+            msg.priority = 2
+            event.connection.send(msg)
+
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+            msg.priority = 1
+            event.connection.send(msg)
+
+        else:
+            msg = of.ofp_flow_mod()
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+            event.connection.send(msg)
 
 def launch():
     # Run spanning tree so that we can deal with topologies with loops
     pox.openflow.discovery.launch()
+
     pox.openflow.spanning_tree.launch()
 
     '''
